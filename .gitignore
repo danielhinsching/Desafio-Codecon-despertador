@@ -1,10 +1,16 @@
-# Android / Gradle artifacts
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Build output (Android / Xcode)
+build/
+*.build/
+
+# Android / Gradle
 *.iml
 .gradle/
 local.properties
 .idea/
-.DS_Store
-build/
 captures/
 .externalNativeBuild/
 .cxx/
@@ -16,3 +22,21 @@ android/.idea/
 android/*.iml
 android/build/
 android/*/build/
+
+# Xcode
+DerivedData/
+*.moved-aside
+*.xcuserstate
+xcuserdata/
+*.xcuserdata
+*.xcscmblueprint
+*.xcresult
+
+# XcodeGen
+*.xcodeproj
+*.xcworkspace
+!ios/project.yml
+
+# Swift Package Manager
+.build/
+.swiftpm/
