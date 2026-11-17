@@ -1,0 +1,44 @@
+name: Despertador
+options:
+  bundleIdPrefix: com.codecon
+  createIntermediateGroups: true
+
+settings:
+  base:
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    SWIFT_VERSION: "5.0"
+
+targets:
+  Despertador:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Despertador
+    scheme:
+      testTargets:
+        - DespertadorTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.codecon.despertador
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: "Despertador"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        ENABLE_TESTABILITY: YES
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGN_IDENTITY: ""
+
+  DespertadorTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: DespertadorTests
+    dependencies:
+      - target: Despertador
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.codecon.despertadorTests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGN_IDENTITY: ""

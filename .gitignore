@@ -1,0 +1,23 @@
+# Xcode
+build/
+*.build/
+DerivedData/
+*.moved-aside
+*.xcuserstate
+xcuserdata/
+*.xcuserdata
+*.xcscmblueprint
+*.xcresult
+
+# XcodeGen
+*.xcodeproj
+*.xcworkspace
+!ios/project.yml
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
