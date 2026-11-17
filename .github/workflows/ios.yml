@@ -14,6 +14,9 @@ jobs:
   build-and-test:
     name: Build and Test (iOS)
     runs-on: macos-26
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,12 +40,24 @@ jobs:
           cd ios
           xcodegen generate
 
+      - name: Resolve Simulator Destination
+        id: dest
+        run: |
+          UDID=$(xcrun simctl list devices available -j | jq -r '.devices | to_entries[].value[] | select(.name=="iPhone 17") | .udid' | head -n 1)
+          if [ -n "$UDID" ]; then
+            echo "destination=platform=iOS Simulator,id=$UDID" >> $GITHUB_OUTPUT
+            echo "Selected simulator UDID: $UDID"
+          else
+            echo "destination=platform=iOS Simulator,name=iPhone 17,OS=latest" >> $GITHUB_OUTPUT
+            echo "Falling back to name=iPhone 17,OS=latest"
+          fi
+
       - name: Build
         run: |
           xcodebuild build \
             -project ios/Despertador.xcodeproj \
             -scheme Despertador \
-            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -destination "${{ steps.dest.outputs.destination }}" \
             -derivedDataPath DerivedData \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
@@ -53,7 +68,7 @@ jobs:
           xcodebuild test \
             -project ios/Despertador.xcodeproj \
             -scheme Despertador \
-            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -destination "${{ steps.dest.outputs.destination }}" \
             -derivedDataPath DerivedData \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \

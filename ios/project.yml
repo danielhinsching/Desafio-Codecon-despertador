@@ -2,6 +2,8 @@ name: Despertador
 options:
   bundleIdPrefix: com.codecon
   createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "26.0"
 
 settings:
   base:
