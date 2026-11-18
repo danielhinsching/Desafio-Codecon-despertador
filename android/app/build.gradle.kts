@@ -16,6 +16,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // URL base do servidor Pix: vem da config de build (-PpixServerUrl=... ou env PIX_SERVER_URL), nunca do código.
+        val pixServerUrl = (project.findProperty("pixServerUrl") as String?)
+            ?: System.getenv("PIX_SERVER_URL")
+            ?: ""
+        buildConfigField("String", "PIX_SERVER_URL", "\"$pixServerUrl\"")
     }
 
     buildTypes {
@@ -39,6 +45,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -58,6 +65,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.10.01"))
