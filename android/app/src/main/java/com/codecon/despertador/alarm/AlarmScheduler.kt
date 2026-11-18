@@ -16,12 +16,12 @@ class ExactAlarmPermissionDeniedException(message: String) : SecurityException(m
 open class AlarmScheduler(
     val context: Context? = null,
     val alarmManager: AlarmManager? = null
-) {
+) : Scheduling {
 
     private val resolvedAlarmManager: AlarmManager?
         get() = alarmManager ?: (context?.getSystemService(Context.ALARM_SERVICE) as? AlarmManager)
 
-    open fun canScheduleExactAlarms(): Boolean {
+    override fun canScheduleExactAlarms(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             resolvedAlarmManager?.canScheduleExactAlarms() ?: true
         } else {
@@ -52,7 +52,7 @@ open class AlarmScheduler(
         }
     }
 
-    open fun schedule(atMillis: Long): Int {
+    override fun schedule(atMillis: Long): Int {
         validatePermissionsBeforeSchedule()
 
         val id = computeAlarmId(atMillis)
@@ -86,7 +86,7 @@ open class AlarmScheduler(
         return id
     }
 
-    open fun cancel(id: Int) {
+    override fun cancel(id: Int) {
         val ctx = context ?: return
         val intent = Intent(ctx, AlarmReceiver::class.java).apply {
             action = ACTION_ALARM_TRIGGER
@@ -103,7 +103,7 @@ open class AlarmScheduler(
         }
     }
 
-    open fun redirectToExactAlarmSettings() {
+    override fun redirectToExactAlarmSettings() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             try {
                 val ctx = context ?: return
