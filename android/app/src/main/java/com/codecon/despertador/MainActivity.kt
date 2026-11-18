@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
@@ -41,10 +41,33 @@ class MainActivity : ComponentActivity() {
     }
 
     private var challengeViewModel: ChallengeViewModel? = null
+    private var pendingStore: PendingChallengeStore? = null
+
+    /** Desafio na tela: só quando o alarme tocou (pendente gravado pelo AlarmReceiver) ou no "Testar desafio". */
+    private var showChallenge by mutableStateOf(false)
 
     override fun onPause() {
         super.onPause()
         challengeViewModel?.stopListening()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshPendingChallenge()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        refreshPendingChallenge()
+    }
+
+    /** O alarme pode ter tocado com o app aberto: se há pendente, mostra o desafio com o alvo dele. */
+    private fun refreshPendingChallenge() {
+        if (pendingStore?.load() != null) {
+            if (!showChallenge) challengeViewModel?.reloadFromStore()
+            showChallenge = true
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,12 +77,16 @@ class MainActivity : ComponentActivity() {
 
         val prefs = getSharedPreferences("despertador_prefs", Context.MODE_PRIVATE)
         val store = PendingChallengeStore(prefs)
+        pendingStore = store
         val sensorSource = SensorSource(this)
         val viewModel = ChallengeViewModel(
             store = store,
             sensorSource = sensorSource,
-            // Concluiu as sacudidas: o som do alarme para.
-            onDone = { stopAlarmService() }
+            // Concluiu as sacudidas: o som do alarme para e o app volta à tela de horário.
+            onDone = {
+                stopAlarmService()
+                showChallenge = false
+            }
         )
         challengeViewModel = viewModel
 
@@ -91,15 +118,21 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var showChallengeTest by remember { mutableStateOf(false) }
-                    val hasPendingChallenge = store.load() != null && !viewModel.isDone
+                    // No "Testar desafio" (sem pendente), voltar leva à tela de horário e nada fica gravado.
+                    BackHandler(enabled = showChallenge && store.load() == null) {
+                        viewModel.stopListening()
+                        showChallenge = false
+                    }
 
-                    if (hasPendingChallenge || showChallengeTest) {
+                    if (showChallenge) {
                         ChallengeScreen(viewModel = viewModel, pixViewModel = pixViewModel)
                     } else {
                         AlarmSetupScreen(
                             viewModel = alarmSetupViewModel,
-                            onTestChallenge = { showChallengeTest = true }
+                            onTestChallenge = {
+                                viewModel.startTest()
+                                showChallenge = true
+                            }
                         )
                     }
                 }

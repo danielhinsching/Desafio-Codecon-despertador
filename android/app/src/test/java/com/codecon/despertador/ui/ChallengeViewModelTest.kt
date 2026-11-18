@@ -55,6 +55,40 @@ class ChallengeViewModelTest {
     }
 
     @Test
+    fun creatingWithEmptyStoreDoesNotWriteAnything() {
+        val prefs = InMemorySharedPreferences()
+        val store = PendingChallengeStore(prefs)
+
+        ChallengeViewModel(store = store)
+
+        assertNull(store.load())
+        assertTrue(prefs.all.isEmpty())
+    }
+
+    @Test
+    fun startTestDoesNotWritePendingChallenge() {
+        val store = PendingChallengeStore(InMemorySharedPreferences())
+        val vm = ChallengeViewModel(store = store)
+
+        vm.startTest()
+
+        assertNull(store.load())
+        assertFalse(vm.isDone)
+    }
+
+    @Test
+    fun reloadFromStoreUsesTargetWrittenByReceiverAfterCreation() {
+        val store = PendingChallengeStore(InMemorySharedPreferences())
+        val vm = ChallengeViewModel(initialTarget = 5L, store = store)
+        assertEquals(5L, vm.remaining)
+
+        store.save(target = 777L, ringTimeMillis = 1000L) // o AlarmReceiver grava ao tocar
+        vm.reloadFromStore()
+
+        assertEquals(777L, vm.remaining)
+    }
+
+    @Test
     fun onDoneCalledExactlyOnceWhenChallengeCompletes() {
         var calls = 0
         val vm = ChallengeViewModel(initialTarget = 2L, onDone = { calls++ })
