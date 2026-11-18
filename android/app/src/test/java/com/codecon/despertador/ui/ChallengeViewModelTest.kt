@@ -55,6 +55,19 @@ class ChallengeViewModelTest {
     }
 
     @Test
+    fun onDoneCalledExactlyOnceWhenChallengeCompletes() {
+        var calls = 0
+        val vm = ChallengeViewModel(initialTarget = 2L, onDone = { calls++ })
+
+        vm.onSample(magnitude = 3.0, timeSeconds = 0.0)
+        assertEquals(0, calls)
+        vm.onSample(magnitude = 3.0, timeSeconds = 1.0)
+        assertEquals(1, calls)
+        vm.onSample(magnitude = 3.0, timeSeconds = 2.0)
+        assertEquals(1, calls)
+    }
+
+    @Test
     fun clearsPendingChallengeStoreWhenDone() {
         val prefs = InMemorySharedPreferences()
         val store = PendingChallengeStore(prefs)

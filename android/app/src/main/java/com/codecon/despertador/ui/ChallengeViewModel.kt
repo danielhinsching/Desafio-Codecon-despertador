@@ -15,7 +15,9 @@ class ChallengeViewModel(
     private val store: PendingChallengeStore? = null,
     private val sensorSource: SensorSource? = null,
     threshold: Double = 2.5,
-    minIntervalSeconds: Double = 0.3
+    minIntervalSeconds: Double = 0.3,
+    /** Chamado uma vez quando o desafio de sacudir termina (ex.: parar o som do alarme). */
+    private val onDone: (() -> Unit)? = null
 ) : ViewModel() {
 
     private val counter: ShakeCounter
@@ -73,6 +75,7 @@ class ChallengeViewModel(
         if (isDone) {
             stopListening()
             store?.clear()
+            onDone?.invoke()
         }
     }
 

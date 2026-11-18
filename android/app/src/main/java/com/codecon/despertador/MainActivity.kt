@@ -32,6 +32,13 @@ class MainActivity : ComponentActivity() {
         // Resultado da solicitação de permissão POST_NOTIFICATIONS
     }
 
+    private var challengeViewModel: ChallengeViewModel? = null
+
+    override fun onPause() {
+        super.onPause()
+        challengeViewModel?.stopListening()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setupLockScreenFlags()
@@ -42,8 +49,11 @@ class MainActivity : ComponentActivity() {
         val sensorSource = SensorSource(this)
         val viewModel = ChallengeViewModel(
             store = store,
-            sensorSource = sensorSource
+            sensorSource = sensorSource,
+            // Concluiu as sacudidas: o som do alarme para.
+            onDone = { stopAlarmService() }
         )
+        challengeViewModel = viewModel
 
         val pixStore = PendingPixStore(prefs)
         val pixViewModel = PixPaymentViewModel(
