@@ -10,9 +10,11 @@ class FakeObjectDetectorTest {
     // Bitmap é só passado adiante; o fake não o lê. No JVM o Bitmap do android.jar é um stub,
     // então criamos uma instância sem rodar construtor.
     private val bitmap: Bitmap = run {
-        val f = sun.misc.Unsafe::class.java.getDeclaredField("theUnsafe")
+        val unsafeClass = Class.forName("sun.misc.Unsafe")
+        val f = unsafeClass.getDeclaredField("theUnsafe")
         f.isAccessible = true
-        (f.get(null) as sun.misc.Unsafe).allocateInstance(Bitmap::class.java) as Bitmap
+        val allocate = unsafeClass.getMethod("allocateInstance", Class::class.java)
+        allocate.invoke(f.get(null), Bitmap::class.java) as Bitmap
     }
 
     @Test
