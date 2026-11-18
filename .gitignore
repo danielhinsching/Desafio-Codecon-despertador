@@ -40,3 +40,9 @@ xcuserdata/
 # Swift Package Manager
 .build/
 .swiftpm/
+
+# Server (Vercel / Node)
+server/node_modules/
+server/.env*
+!server/.env.example
+server/.vercel/
