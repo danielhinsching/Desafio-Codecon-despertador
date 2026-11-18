@@ -32,7 +32,8 @@ import com.codecon.despertador.alarm.AlarmSetupViewModel
 @Composable
 fun AlarmSetupScreen(
     viewModel: AlarmSetupViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onTestChallenge: (() -> Unit)? = null
 ) {
     val hour = viewModel.hour
     val minute = viewModel.minute
@@ -162,6 +163,16 @@ fun AlarmSetupScreen(
                 text = "Definir alarme",
                 style = MaterialTheme.typography.titleMedium
             )
+        }
+
+        if (onTestChallenge != null) {
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(
+                onClick = onTestChallenge,
+                modifier = Modifier.fillMaxWidth(0.85f)
+            ) {
+                Text("Testar Tela de Desafio")
+            }
         }
     }
 }

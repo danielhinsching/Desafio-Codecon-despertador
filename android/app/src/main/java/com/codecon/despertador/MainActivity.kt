@@ -13,13 +13,21 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.codecon.despertador.alarm.AlarmRingingService
+import com.codecon.despertador.alarm.AlarmScheduler
+import com.codecon.despertador.alarm.AlarmSetupViewModel
+import com.codecon.despertador.alarm.AlarmStore
 import com.codecon.despertador.data.HttpPixApi
 import com.codecon.despertador.sensor.SensorSource
 import com.codecon.despertador.storage.PendingChallengeStore
 import com.codecon.despertador.storage.PendingPixStore
+import com.codecon.despertador.ui.AlarmSetupScreen
 import com.codecon.despertador.ui.ChallengeScreen
 import com.codecon.despertador.ui.ChallengeViewModel
 import com.codecon.despertador.ui.PixPaymentViewModel
@@ -70,13 +78,30 @@ class MainActivity : ComponentActivity() {
             }
         )
 
+        val alarmStore = AlarmStore(prefs)
+        val alarmScheduler = AlarmScheduler(this)
+        val alarmSetupViewModel = AlarmSetupViewModel(
+            scheduler = alarmScheduler,
+            store = alarmStore
+        )
+
         setContent {
             MaterialTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ChallengeScreen(viewModel = viewModel, pixViewModel = pixViewModel)
+                    var showChallengeTest by remember { mutableStateOf(false) }
+                    val hasPendingChallenge = store.load() != null && !viewModel.isDone
+
+                    if (hasPendingChallenge || showChallengeTest) {
+                        ChallengeScreen(viewModel = viewModel, pixViewModel = pixViewModel)
+                    } else {
+                        AlarmSetupScreen(
+                            viewModel = alarmSetupViewModel,
+                            onTestChallenge = { showChallengeTest = true }
+                        )
+                    }
                 }
             }
         }
