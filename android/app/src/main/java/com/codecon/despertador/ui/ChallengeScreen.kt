@@ -26,7 +26,8 @@ import java.util.Locale
 @Composable
 fun ChallengeScreen(
     viewModel: ChallengeViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    pixViewModel: PixPaymentViewModel? = null
 ) {
     val remaining = viewModel.remaining
     val isDone = viewModel.isDone
@@ -118,6 +119,11 @@ fun ChallengeScreen(
                         color = MaterialTheme.colorScheme.primary,
                         textAlign = TextAlign.Center
                     )
+                }
+
+                if (pixViewModel != null) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    PixPaymentSection(viewModel = pixViewModel)
                 }
             }
         }
