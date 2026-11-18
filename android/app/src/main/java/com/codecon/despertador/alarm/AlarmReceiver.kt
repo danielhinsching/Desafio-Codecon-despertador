@@ -17,7 +17,7 @@ open class AlarmReceiver : BroadcastReceiver() {
 
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val store = PendingChallengeStore(prefs)
-        val target = processAlarmTrigger(context, ringTimeMillis, store)
+        val target = processAlarmTrigger(ringTimeMillis, store)
 
         // Se o aparelho estiver interativo (tela acesa/em uso), inicia a Activity diretamente
         launchChallengeActivityIfInteractive(context, target, ringTimeMillis)
@@ -26,7 +26,7 @@ open class AlarmReceiver : BroadcastReceiver() {
         startAlarmService(context, target, ringTimeMillis)
     }
 
-    open fun processAlarmTrigger(context: Context, ringTimeMillis: Long, store: PendingChallengeStore): Long {
+    open fun processAlarmTrigger(ringTimeMillis: Long, store: PendingChallengeStore): Long {
         val target = ChallengeTarget.shakes(ringTimeMillis)
         store.save(target = target, ringTimeMillis = ringTimeMillis)
         return target

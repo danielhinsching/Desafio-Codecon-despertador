@@ -14,12 +14,12 @@ import kotlin.math.abs
 class ExactAlarmPermissionDeniedException(message: String) : SecurityException(message)
 
 open class AlarmScheduler(
-    val context: Context,
+    val context: Context? = null,
     val alarmManager: AlarmManager? = null
 ) {
 
     private val resolvedAlarmManager: AlarmManager?
-        get() = alarmManager ?: (context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager)
+        get() = alarmManager ?: (context?.getSystemService(Context.ALARM_SERVICE) as? AlarmManager)
 
     open fun canScheduleExactAlarms(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -31,7 +31,7 @@ open class AlarmScheduler(
 
     open fun canUseFullScreenIntent(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+            val notificationManager = context?.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
             notificationManager?.canUseFullScreenIntent() ?: true
         } else {
             true
@@ -56,24 +56,25 @@ open class AlarmScheduler(
         validatePermissionsBeforeSchedule()
 
         val id = computeAlarmId(atMillis)
-        val triggerIntent = Intent(context, AlarmReceiver::class.java).apply {
+        val ctx = context ?: throw IllegalStateException("Context required to schedule alarm")
+        val triggerIntent = Intent(ctx, AlarmReceiver::class.java).apply {
             action = ACTION_ALARM_TRIGGER
             putExtra(EXTRA_ALARM_ID, id)
             putExtra(EXTRA_RING_TIME, atMillis)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
-            context,
+            ctx,
             id,
             triggerIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val showIntent = Intent(context, MainActivity::class.java).apply {
+        val showIntent = Intent(ctx, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val showPendingIntent = PendingIntent.getActivity(
-            context,
+            ctx,
             id,
             showIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -86,11 +87,12 @@ open class AlarmScheduler(
     }
 
     open fun cancel(id: Int) {
-        val intent = Intent(context, AlarmReceiver::class.java).apply {
+        val ctx = context ?: return
+        val intent = Intent(ctx, AlarmReceiver::class.java).apply {
             action = ACTION_ALARM_TRIGGER
         }
         val pendingIntent = PendingIntent.getBroadcast(
-            context,
+            ctx,
             id,
             intent,
             PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
@@ -104,11 +106,12 @@ open class AlarmScheduler(
     open fun redirectToExactAlarmSettings() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             try {
+                val ctx = context ?: return
                 val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                    data = Uri.parse("package:${context.packageName}")
+                    data = Uri.parse("package:${ctx.packageName}")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
-                context.startActivity(intent)
+                ctx.startActivity(intent)
             } catch (_: Exception) {}
         }
     }
@@ -116,11 +119,12 @@ open class AlarmScheduler(
     open fun redirectToFullScreenIntentSettings() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             try {
+                val ctx = context ?: return
                 val intent = Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
-                    data = Uri.parse("package:${context.packageName}")
+                    data = Uri.parse("package:${ctx.packageName}")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
-                context.startActivity(intent)
+                ctx.startActivity(intent)
             } catch (_: Exception) {}
         }
     }

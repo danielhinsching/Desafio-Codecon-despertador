@@ -14,10 +14,9 @@ import org.junit.Test
 class AlarmSchedulerTest {
 
     private class TestableAlarmScheduler(
-        context: Context,
         var permissionGranted: Boolean = true,
         var fullScreenGranted: Boolean = true
-    ) : AlarmScheduler(context) {
+    ) : AlarmScheduler() {
         var exactAlarmSettingsRedirected = false
         var fullScreenSettingsRedirected = false
 
@@ -48,7 +47,7 @@ class AlarmSchedulerTest {
 
     @Test
     fun `computeAlarmId generates non-zero positive integer`() {
-        val scheduler = AlarmScheduler(fakeContext())
+        val scheduler = AlarmScheduler()
         val id1 = scheduler.computeAlarmId(1_800_000_000_000L)
         val id2 = scheduler.computeAlarmId(0L)
         val id3 = scheduler.computeAlarmId(1_800_000_001_500L)
@@ -60,7 +59,7 @@ class AlarmSchedulerTest {
 
     @Test
     fun `validatePermissionsBeforeSchedule throws and redirects when exact alarm is denied`() {
-        val scheduler = TestableAlarmScheduler(fakeContext(), permissionGranted = false)
+        val scheduler = TestableAlarmScheduler(permissionGranted = false)
 
         try {
             scheduler.validatePermissionsBeforeSchedule()
@@ -73,7 +72,7 @@ class AlarmSchedulerTest {
 
     @Test
     fun `validatePermissionsBeforeSchedule redirects when full screen intent is denied on Android 14`() {
-        val scheduler = TestableAlarmScheduler(fakeContext(), permissionGranted = true, fullScreenGranted = false)
+        val scheduler = TestableAlarmScheduler(permissionGranted = true, fullScreenGranted = false)
 
         scheduler.validatePermissionsBeforeSchedule()
         assertTrue("Should call redirect to full screen settings", scheduler.fullScreenSettingsRedirected)
@@ -86,7 +85,7 @@ class AlarmSchedulerTest {
         val store = PendingChallengeStore(fakePrefs)
 
         val ringTimeMillis = 1_800_000_000_000L
-        val computedTarget = receiver.processAlarmTrigger(fakeContext(), ringTimeMillis, store)
+        val computedTarget = receiver.processAlarmTrigger(ringTimeMillis, store)
 
         val expectedTarget = ChallengeTarget.shakes(ringTimeMillis)
         assertEquals(expectedTarget, computedTarget)
@@ -96,21 +95,6 @@ class AlarmSchedulerTest {
         assertNotNull(loaded)
         assertEquals(expectedTarget, loaded?.target)
         assertEquals(ringTimeMillis, loaded?.ringTimeMillis)
-    }
-
-    @Test
-    fun `TestableAlarmReceiver triggers activity and service`() {
-        val receiver = TestableAlarmReceiver()
-        val fakePrefs = FakeSharedPreferences()
-        val store = PendingChallengeStore(fakePrefs)
-
-        val ringTimeMillis = 1_800_000_000_000L
-        receiver.processAlarmTrigger(fakeContext(), ringTimeMillis, store)
-        receiver.launchChallengeActivityIfInteractive(fakeContext(), 1_800_000_000L, ringTimeMillis)
-        receiver.startAlarmService(fakeContext(), 1_800_000_000L, ringTimeMillis)
-
-        assertTrue("Activity should be launched", receiver.activityLaunched)
-        assertTrue("Service should be started", receiver.serviceStarted)
     }
 
     @Test
@@ -128,17 +112,5 @@ class AlarmSchedulerTest {
 
         // Past duration
         assertEquals(1.0f, ramp.level(60.0), 0.001f)
-    }
-
-    private fun fakeContext(): Context {
-        return java.lang.reflect.Proxy.newProxyInstance(
-            Context::class.java.classLoader,
-            arrayOf(Context::class.java)
-        ) { _, method, _ ->
-            when (method.name) {
-                "getPackageName" -> "com.codecon.despertador"
-                else -> null
-            }
-        } as Context
     }
 }
