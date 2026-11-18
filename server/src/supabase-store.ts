@@ -20,6 +20,19 @@ export function createSupabaseStore(
       if (error) throw new Error(`payments.findByMpId: ${error.message}`);
       return (data as Payment | null) ?? null;
     },
+    async findPendingByAlarm(alarmId, nowIso) {
+      const { data, error } = await db
+        .from("payments")
+        .select()
+        .eq("alarm_id", alarmId)
+        .eq("status", "pending")
+        .gt("expires_at", nowIso)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw new Error(`payments.findPendingByAlarm: ${error.message}`);
+      return (data as Payment | null) ?? null;
+    },
     async updateWhere(match, patch) {
       const { data, error } = await db
         .from("payments")

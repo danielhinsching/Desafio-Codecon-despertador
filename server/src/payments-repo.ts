@@ -26,6 +26,8 @@ export type PaymentInsert = Omit<Payment, "id" | "created_at" | "used_at">;
 export interface PaymentsStore {
   insert(row: PaymentInsert): Promise<Payment>;
   findByMpId(mpPaymentId: string): Promise<Payment | null>;
+  /** Cobrança `pending` com expires_at > nowIso para o alarme, se houver. */
+  findPendingByAlarm(alarmId: string, nowIso: string): Promise<Payment | null>;
   /** UPDATE ... WHERE mp_payment_id = ? AND status = ? (uma única operação); devolve as linhas alteradas. */
   updateWhere(
     match: { mpPaymentId: string; status: PaymentStatus },
@@ -48,6 +50,11 @@ export function createPaymentsRepo(store: PaymentsStore) {
 
     getByMpId(mpPaymentId: string): Promise<Payment | null> {
       return store.findByMpId(mpPaymentId);
+    },
+
+    /** Cobrança pending ainda não expirada do alarme (para não duplicar). */
+    findActiveByAlarm(alarmId: string, now: Date): Promise<Payment | null> {
+      return store.findPendingByAlarm(alarmId, now.toISOString());
     },
 
     /** pending -> approved. Devolve true se alterou. */

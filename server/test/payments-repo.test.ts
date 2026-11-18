@@ -16,6 +16,10 @@ function fakeStore(): PaymentsStore {
       const r = rows.find((x) => x.mp_payment_id === id);
       return r ? { ...r } : null;
     },
+    async findPendingByAlarm(alarmId, nowIso) {
+      const r = rows.find((x) => x.alarm_id === alarmId && x.status === "pending" && x.expires_at > nowIso);
+      return r ? { ...r } : null;
+    },
     async updateWhere(match, patch) {
       const hit = rows.filter((r) => r.mp_payment_id === match.mpPaymentId && r.status === match.status);
       hit.forEach((r) => Object.assign(r, patch));
